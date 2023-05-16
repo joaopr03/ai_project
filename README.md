@@ -1,2 +1,2 @@
-# ia_project
+# ai_project
 Artificial intelligence project.
