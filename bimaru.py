@@ -40,6 +40,8 @@ class Board:
         self.matrix = matrix
         self.rows = rows
         self.cols = cols
+        self.rows_completed = np.full(10, False) 
+        self.cols_completed = np.full(10, False) 
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -63,6 +65,22 @@ class Board:
             return (self.matrix[row][col-1], None)
         return (self.matrix[row][col-1], self.matrix[row][col+1])
 
+    def row_completed(self, row: int) -> bool:
+        if not self.rows_completed[row]:
+            for i in range(0,10):
+                if self.get_value(row, i) == None:
+                    return False
+            self.rows_completed[row] = True
+        return True
+
+    def column_completed(self, col: int) -> bool:
+        if not self.cols_completed[col]:    
+            for i in range(0,10):
+                if self.get_value(i, col) == None:
+                    return False
+            self.cols_completed[col] = True
+        return True
+
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -82,7 +100,7 @@ class Board:
         cols = [int(x) for x in cols]
 
         n = int(sys.stdin.readline().replace('\n', ''))
-        matrix = np.full((10, 10), None)
+        matrix = np.full((10, 10), None) 
         
         for i in range (0, n):
             hint = sys.stdin.readline().replace('\n', '').split('\t')
@@ -102,8 +120,34 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
-        pass
+
+        table = state.board
+
+        for i in range(0,10):
+            if table.column_completed(i):
+                pass
+            else:
+                if table.cols[i] == 0:
+                    return "Preencher coluna toda com água"
+                count = 0
+                for j in range(0,10):
+                    if table.get_value(j, i) != "." or table.get_value(j, i) != None:
+                        count += 1
+                    if count == table.cols[i]:
+                        return "Preencher coluna toda com água"
+
+        for i in range(0,10):
+            if table.rows_completed(i):
+                pass
+            else:
+                if table.rows[i] == 0:
+                    return "Preencher linha toda com água"
+                count = 0
+                for j in range(0,10):
+                    if table.get_value(i, j) != "." or table.get_value(i, j) != None:
+                        count += 1
+                    if count == table.rows[i]:
+                        return "Preencher linha toda com água"
 
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
