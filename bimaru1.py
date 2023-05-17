@@ -43,12 +43,19 @@ class Board:
         self.invalid = False
         self.row_count = row_count # contar o nr de quadrados preenchidos
         self.col_count = col_count # sem ser por agua em cada linha / coluna
-
+    
+    def __str__(self) -> str:
+        string = ''
+        #self.matrix[self.matrix == None] = '_' #print to debug without None
+        for row in self.matrix:
+            string += (''.join(map(str, row))) + '\n'
+        return string
+    
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.matrix[row][col]
     
-    def set_value(self, row: int, col: int, value: str) -> Board:
+    def set_value(self, row: int, col: int, value: str):
         """Devolve um novo Board com o novo valor na posição indicada"""
         """Não sei se vai ter grande utilidade"""
         new_matrix = self.matrix.copy()
@@ -179,7 +186,7 @@ if __name__ == "__main__":
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    board = Board.parse_instance()
-    bimaru = Bimaru(board)
+    '''board = Board.parse_instance()
+    bimaru = Bimaru(board)'''
     # TODO
     pass
