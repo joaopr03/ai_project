@@ -46,16 +46,28 @@ class Board:
     
     def __str__(self) -> str:
         string = ''
-        #self.matrix[self.matrix == None] = '_' #print to debug without None
+        '''#print to debug without None
+        m = self.matrix.copy()
+        m[m == None] = '_'
+        for row in self.matrix:
+            string += (''.join(map(str, row))) + '\n'
+        return string
+        '''
         for row in self.matrix:
             string += (''.join(map(str, row))) + '\n'
         return string
     
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        return self.matrix[row][col]
+        if 0 <= row < 10 and 0 <= col < 10:
+            return self.matrix[row][col]
+        return None
     
-    def set_value(self, row: int, col: int, value: str):
+    def insert_water(self, row: int, col: int):
+        if 0 <= row < 10 and 0 <= col < 10:
+            self.matrix[row][col] = '.'
+    
+    '''def set_value(self, row: int, col: int, value: str):
         """Devolve um novo Board com o novo valor na posição indicada"""
         """Não sei se vai ter grande utilidade"""
         new_matrix = self.matrix.copy()
@@ -67,47 +79,84 @@ class Board:
         if value != '.':
             new_row_count[row] += 1
             new_col_count[col] += 1
-        return Board(new_matrix, new_cols, new_rows, new_row_count, new_col_count)
+        return Board(new_matrix, new_cols, new_rows, new_row_count, new_col_count)'''
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        if (row == 0):
-            return (None, self.matrix[row+1][col])
-        if (row == 9):
-            return (self.matrix[row-1][col], None)
-        return (self.matrix[row-1][col], self.matrix[row+1][col])
+        return (self.get_value(row-1, col), self.get_value(row+1, col))
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        if (col == 0):
-            return (None, self.matrix[row][col+1])
-        if (col == 9):
-            return (self.matrix[row][col-1], None)
-        return (self.matrix[row][col-1], self.matrix[row][col+1])
+        return (self.get_value(row, col-1), self.get_value(row, col+1))
+
+    def full_col(self, col: int) -> bool:
+        return self.cols[col] - self.col_count[col] == 0
+    
+    def full_row(self, row: int) -> bool:
+        return self.rows[row] - self.row_count[row] == 0
     
     def check_completed(self) -> bool:
         for i in range(0, 10):
-            if self.cols[i] - self.col_count[i] != 0 or self.rows[i] - self.row_count[i] != 0:
+            if not self.full_col(i) or not self.full_row(i):
                 return False
             #checkar os barcos
         return True
     
     def complete_row_with_water(self, row: int):
         for i in range(0,10):
-            if self.matrix[row][i] == None:
-                self.matrix[row][i] = '.'
+            if self.get_value(row, i) == None:
+                self.insert_water(row, i)
     
     def complete_col_with_water(self, col: int):
         for i in range(0,10):
-            if self.matrix[i][col] == None:
-                self.matrix[i][col] = '.'
+            if self.get_value(i, col) == None:
+                self.insert_water(i, col)
     
-    def possible_actions(self):
-        # ☠️
-        pass
+    def complete_arround_with_water(self, row: int, col: int):
+        value = self.get_value(row, col)
 
+        #valores adjacentes nas diagonais
+        self.insert_water(row-1, col-1)
+        self.insert_water(row-1, col+1)
+        self.insert_water(row+1, col-1)
+        self.insert_water(row+1, col+1)
+
+        if value in ('C', 'c'):
+            self.insert_water(row-1, col)
+            self.insert_water(row, col-1)
+            self.insert_water(row, col+1)
+            self.insert_water(row+1, col)
+        elif value in ('T', 't'):
+            self.insert_water(row-1, col)
+            self.insert_water(row, col-1)
+            self.insert_water(row, col+1)
+        elif value in ('B', 'b'):
+            self.insert_water(row, col-1)
+            self.insert_water(row, col+1)
+            self.insert_water(row+1, col)
+        elif value in ('L', 'l'):
+            self.insert_water(row-1, col)
+            self.insert_water(row, col-1)
+            self.insert_water(row+1, col)
+        elif value in ('R', 'r'):
+            self.insert_water(row-1, col)
+            self.insert_water(row, col+1)
+            self.insert_water(row+1, col)
+
+    def start_board(self):
+        for i in range(0, 10):
+            if self.full_row(i):
+                self.complete_row_with_water(i)
+            if self.full_col(i):
+                self.complete_col_with_water(i)
+        for i in range(0, 10):
+            for j in range(0, 10):
+                if self.get_value(i, j) != '.' and self.get_value(i, j) != None:
+                    self.complete_arround_with_water(i, j)
+        return self
+        
 
     @staticmethod
     def parse_instance():
@@ -140,9 +189,10 @@ class Board:
                 row_count[int(hint[1])] += 1
                 col_count[int(hint[2])] += 1
         
-        return Board(matrix, rows, cols, row_count, col_count)
+        return Board(matrix, rows, cols, row_count, col_count).start_board()
 
     # TODO: outros metodos da classe
+
 
 
 class Bimaru(Problem):
