@@ -36,23 +36,22 @@ class BimaruState:
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
 
-    def __init__(self, matrix, rows, cols, row_count, col_count):
+    def __init__(self, matrix, rows, cols, squares_left_row, squares_left_col):
         self.matrix = matrix
-        self.rows = rows
-        self.cols = cols
+        self.rows = rows    # contar quantos quadrados falta preencher
+        self.cols = cols    # com barcos em cada linha / coluna
         self.invalid = False
-        self.row_count = row_count # contar o nr de quadrados preenchidos
-        self.col_count = col_count # sem ser por agua em cada linha / coluna
+        self.squares_left_row = squares_left_row    # contar quantos quadrados falta
+        self.squares_left_col = squares_left_col    # preencher em cada linha / coluna
     
     def __str__(self) -> str:
         string = ''
         '''#print to debug without None
         m = self.matrix.copy()
         m[m == None] = '_'
-        for row in self.matrix:
+        for row in m:
             string += (''.join(map(str, row))) + '\n'
-        return string
-        '''
+        return string'''
         for row in self.matrix:
             string += (''.join(map(str, row))) + '\n'
         return string
@@ -64,8 +63,18 @@ class Board:
         return None
     
     def insert_water(self, row: int, col: int):
-        if 0 <= row < 10 and 0 <= col < 10:
+        if 0 <= row < 10 and 0 <= col < 10 and self.get_value(row, col) == None:
             self.matrix[row][col] = '.'
+            self.squares_left_row[row] -= 1
+            self.squares_left_col[col] -= 1
+    
+    def insert_boat(self, row: int, col: int, value: str):
+        if 0 <= row < 10 and 0 <= col < 10 and self.get_value(row, col) == None:
+            self.matrix[row][col] = value
+            self.squares_left_row[row] -= 1
+            self.squares_left_col[col] -= 1
+            self.rows -= 1
+            self.cols -= 1
     
     '''def set_value(self, row: int, col: int, value: str):
         """Devolve um novo Board com o novo valor na posição indicada"""
@@ -73,13 +82,15 @@ class Board:
         new_matrix = self.matrix.copy()
         new_rows = self.rows.copy()
         new_cols = self.cols.copy()
-        new_row_count = self.row_count.copy()
-        new_col_count = self.col_count.copy()
+        new_slrow = self.squares_left_row.copy()
+        new_slcol = self.squares_left_col.copy()
         new_matrix[row][col] = value
+        new_slrow[row] -= 1
+        new_slcol[col] -= 1
         if value != '.':
-            new_row_count[row] += 1
-            new_col_count[col] += 1
-        return Board(new_matrix, new_cols, new_rows, new_row_count, new_col_count)'''
+            new_rows[row] -= 1
+            new_cols[col] -= 1
+        return Board(new_matrix, new_cols, new_rows, new_slrow, new_slcol)'''
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
@@ -92,16 +103,17 @@ class Board:
         return (self.get_value(row, col-1), self.get_value(row, col+1))
 
     def full_col(self, col: int) -> bool:
-        return self.cols[col] - self.col_count[col] == 0
+        return self.cols[col] == 0
     
     def full_row(self, row: int) -> bool:
-        return self.rows[row] - self.row_count[row] == 0
+        return self.rows[row] == 0
     
     def check_completed(self) -> bool:
         for i in range(0, 10):
             if not self.full_col(i) or not self.full_row(i):
                 return False
-            #checkar os barcos
+            #checkar os barcos #TODO
+        #self.matrix[self.matrix == None] = '.' #preencher o que esta vazio com agua
         return True
     
     def complete_row_with_water(self, row: int):
@@ -111,8 +123,7 @@ class Board:
     
     def complete_col_with_water(self, col: int):
         for i in range(0,10):
-            if self.get_value(i, col) == None:
-                self.insert_water(i, col)
+            self.insert_water(i, col)
     
     def complete_arround_with_water(self, row: int, col: int):
         value = self.get_value(row, col)
@@ -156,7 +167,30 @@ class Board:
                 if self.get_value(i, j) != '.' and self.get_value(i, j) != None:
                     self.complete_arround_with_water(i, j)
         return self
-        
+    
+    def possible_actions(self):
+        '''
+        """completar barcos de tamaho 2 nos seguintes casos"""
+        if self.get_value(row,col) in ('T', 't'):
+            if row == 8 or self.get_value(row+2,col) == '.':
+                self.insert_boat(row+1, col, 'b')
+        elif self.get_value(row,col) in ('B', 'b'):
+            if row == 1 or self.get_value(row-2,col) == '.':
+                self.insert_boat(row-1, col, 't')
+        elif self.get_value(row,col) in ('R', 'r'):
+            if col == 1 or self.get_value(row,col-2) == '.':
+                self.insert_boat(row, col-1, 'l')
+        elif self.get_value(row,col) in ('L', 'l'):
+            if col == 8 or self.get_value(row,col+2) == '.':
+                self.insert_boat(row, col+1, 'r')
+        '''
+        """mais ideias:
+            -   comparar squares_left_row e squares_left_col com
+                rows e cols se for igual preencher com barcos
+            
+            -   verificar os valores de rows ou cols que são iguais
+                a 4, 3, 2... para ver onde colocar o maior barco"""
+ 
 
     @staticmethod
     def parse_instance():
@@ -178,21 +212,22 @@ class Board:
 
         n = int(sys.stdin.readline().replace('\n', ''))
         matrix = np.full((10, 10), None)
-        row_count = np.zeros((10,))
-        col_count = np.zeros((10,))
+        slrow = [10] * 10
+        slcol = [10] * 10
         for i in range (0, n):
             hint = sys.stdin.readline().replace('\n', '').split('\t')
+            slrow[int(hint[1])] -= 1
+            slcol[int(hint[2])] -= 1
             if (hint[3] == 'W'):
                 matrix[int(hint[1])][int(hint[2])] = '.'
             else:
                 matrix[int(hint[1])][int(hint[2])] = hint[3]
-                row_count[int(hint[1])] += 1
-                col_count[int(hint[2])] += 1
+                rows[int(hint[1])] -= 1
+                cols[int(hint[2])] -= 1
         
-        return Board(matrix, rows, cols, row_count, col_count).start_board()
+        return Board(matrix, rows, cols, slrow, slcol).start_board()
 
     # TODO: outros metodos da classe
-
 
 
 class Bimaru(Problem):
@@ -237,6 +272,8 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
     '''board = Board.parse_instance()
-    bimaru = Bimaru(board)'''
+    bimaru = Bimaru(board)
+    goal = greedy_search(bimaru)
+    print(goal.state.board)'''
     # TODO
     pass
