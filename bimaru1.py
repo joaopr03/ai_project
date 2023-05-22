@@ -46,12 +46,12 @@ class Board:
     
     def __str__(self) -> str:
         string = ''
-        '''#print to debug without None
+        #print to debug without None
         m = self.matrix.copy()
         m[m == None] = '_'
         for row in m:
             string += (''.join(map(str, row))) + '\n'
-        return string'''
+        return string
         for row in self.matrix:
             string += (''.join(map(str, row))) + '\n'
         return string
@@ -144,18 +144,26 @@ class Board:
             self.insert_water(row-1, col)
             self.insert_water(row, col-1)
             self.insert_water(row, col+1)
+            self.insert_water(row+2, col-1)
+            self.insert_water(row+2, col+1)
         elif value in ('B', 'b'):
             self.insert_water(row, col-1)
             self.insert_water(row, col+1)
             self.insert_water(row+1, col)
+            self.insert_water(row-2, col-1)
+            self.insert_water(row-2, col+1)
         elif value in ('L', 'l'):
             self.insert_water(row-1, col)
             self.insert_water(row, col-1)
             self.insert_water(row+1, col)
+            self.insert_water(row-1, col+2)
+            self.insert_water(row+1, col+2)
         elif value in ('R', 'r'):
             self.insert_water(row-1, col)
             self.insert_water(row, col+1)
             self.insert_water(row+1, col)
+            self.insert_water(row-1, col-2)
+            self.insert_water(row+1, col-2)
 
     def start_board(self):
         for i in range(0, 10):
@@ -208,17 +216,16 @@ class Board:
             if '.' in h:
                 self.insert_boat(row-1, col, 'm ou t')
                 self.insert_boat(row+1, col, 'm ou b')
-                if h[0] == None:
-                    self.insert_water(row, col-1)
-                if h[1] == None:
-                    self.insert_water(row, col+1)
+                
+                self.insert_water(row, col-1)
+                self.insert_water(row, col+1)
+
             elif '.' in v:
                 self.insert_boat(row, col-1, 'm ou l')
                 self.insert_boat(row, col+1, 'm ou r')
-                if v[0] == None:
-                    self.insert_water(row-1, col)
-                if v[1] == None:
-                    self.insert_water(row+1, col)
+
+                self.insert_water(row-1, col)
+                self.insert_water(row+1, col)
         '''
 
 
@@ -266,6 +273,7 @@ class Board:
 
     # TODO: outros metodos da classe
 
+print(Board.parse_instance())
 
 class Bimaru(Problem):
     def __init__(self, board: Board):
