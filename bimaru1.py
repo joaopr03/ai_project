@@ -69,6 +69,7 @@ class Board:
             self.squares_left_col[col] -= 1
     
     def insert_boat(self, row: int, col: int, value: str):
+        '''se calhar usar logo complete_arround_with_water e complete_row/col_with_water nesta função'''
         if 0 <= row < 10 and 0 <= col < 10 and self.get_value(row, col) == None:
             self.matrix[row][col] = value
             self.squares_left_row[row] -= 1
@@ -170,27 +171,63 @@ class Board:
     
     def possible_actions(self):
         '''
-        """completar barcos de tamaho 2 nos seguintes casos"""
+        """ações possíveis para um quadrado preenchido por uma ponta"""
+
         if self.get_value(row,col) in ('T', 't'):
             if row == 8 or self.get_value(row+2,col) == '.':
                 self.insert_boat(row+1, col, 'b')
+            else
+                self.insert_boat(row+1, col, 'm ou b')
+
         elif self.get_value(row,col) in ('B', 'b'):
             if row == 1 or self.get_value(row-2,col) == '.':
                 self.insert_boat(row-1, col, 't')
+            else
+                self.insert_boat(row+1, col, 'm ou t')
+
         elif self.get_value(row,col) in ('R', 'r'):
             if col == 1 or self.get_value(row,col-2) == '.':
                 self.insert_boat(row, col-1, 'l')
+            else
+                self.insert_boat(row+1, col, 'm ou l')
+
         elif self.get_value(row,col) in ('L', 'l'):
             if col == 8 or self.get_value(row,col+2) == '.':
                 self.insert_boat(row, col+1, 'r')
+            else
+                self.insert_boat(row+1, col, 'm ou r')
         '''
-        """mais ideias:
-            -   comparar squares_left_row e squares_left_col com
-                rows e cols se for igual preencher com barcos
-            
-            -   verificar os valores de rows ou cols que são iguais
-                a 4, 3, 2... para ver onde colocar o maior barco"""
- 
+
+
+        '''
+        """ações possíveis para um quadrado preenchido por um meio"""
+        
+        if self.get_value(row,col) in ('M', 'm'):
+            h = self.adjacent_horizontal_values(row, col)
+            v = self.adjacent_vertical_values(row, col)
+            if '.' in h:
+                self.insert_boat(row-1, col, 'm ou t')
+                self.insert_boat(row+1, col, 'm ou b')
+                if h[0] == None:
+                    self.insert_water(row, col-1)
+                if h[1] == None:
+                    self.insert_water(row, col+1)
+            elif '.' in v:
+                self.insert_boat(row, col-1, 'm ou l')
+                self.insert_boat(row, col+1, 'm ou r')
+                if v[0] == None:
+                    self.insert_water(row-1, col)
+                if v[1] == None:
+                    self.insert_water(row+1, col)
+        '''
+
+
+        '''
+        if self.squares_left_row[row] == self.rows[row]:
+            self.complete_row_with_boats(row) #TODO
+        if self.squares_left_col[col] == self.cols[col]:
+            self.complete_col_with_boats(col) #TODO
+        '''
 
     @staticmethod
     def parse_instance():
