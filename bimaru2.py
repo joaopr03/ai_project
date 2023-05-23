@@ -446,85 +446,19 @@ if __name__ == "__main__":
     bimaru = Bimaru(board)
 
     b1 = BimaruState(board)
-    '''print(b1.board)
-    print(b1.board.rows)
-    print(b1.board.cols)
-    print(b1.board.squares_left_row)
-    print(b1.board.squares_left_col)
-    print(bimaru.actions(b1))'''
-    b2 = bimaru.result(b1, bimaru.actions(b1))
-    '''print(b2.board)
-    print(b2.board.rows)
-    print(b2.board.cols)
-    print(b2.board.squares_left_row)
-    print(b2.board.squares_left_col)
-    print(bimaru.actions(b2))'''
-    b3 = bimaru.result(b2, bimaru.actions(b2))
-    '''print(b3.board)
-    print(b3.board.rows)
-    print(b3.board.cols)
-    print(b3.board.squares_left_row)
-    print(b3.board.squares_left_col)
-    print(bimaru.actions(b3))'''
-    b4 = bimaru.result(b3, bimaru.actions(b3))
-    '''print(b4.board)
-    print(b4.board.rows)
-    print(b4.board.cols)
-    print(b4.board.squares_left_row)
-    print(b4.board.squares_left_col)
-    print(bimaru.actions(b4))'''
-    b5 = bimaru.result(b4, bimaru.actions(b4))
-    '''print(b5.board)
-    print(b5.board.rows)
-    print(b5.board.cols)
-    print(b5.board.squares_left_row)
-    print(b5.board.squares_left_col)
-    print(bimaru.actions(b5))'''
-    b6 = bimaru.result(b5, bimaru.actions(b5))
-    '''print(b6.board)
-    print(b6.board.rows)
-    print(b6.board.cols)
-    print(b6.board.squares_left_row)
-    print(b6.board.squares_left_col)
-    print(bimaru.actions(b6))'''
-    b7 = bimaru.result(b6, bimaru.actions(b6))
-    '''print(b7.board)
-    print(b7.board.rows)
-    print(b7.board.cols)
-    print(b7.board.squares_left_row)
-    print(b7.board.squares_left_col)
-    print(bimaru.actions(b7))'''
-    b8 = bimaru.result(b7, bimaru.actions(b7))
-    '''print(b8.board)
-    print(b8.board.rows)
-    print(b8.board.cols)
-    print(b8.board.squares_left_row)
-    print(b8.board.squares_left_col)
-    print(bimaru.actions(b8))'''
-    b9 = bimaru.result(b8, bimaru.actions(b8))
-    '''print(b9.board)
-    print(b9.board.rows)
-    print(b9.board.cols)
-    print(b9.board.squares_left_row)
-    print(b9.board.squares_left_col)
-    print(bimaru.actions(b9))'''
-    b10 = bimaru.result(b9, bimaru.actions(b9))
-    '''print(b10.board)
-    print(b10.board.rows)
-    print(b10.board.cols)
-    print(b10.board.squares_left_row)
-    print(b10.board.squares_left_col)
-    print(bimaru.actions(b10))'''
-    b11 = bimaru.result(b10, bimaru.actions(b10))
-    '''print(b11.board)
-    print(b11.board.rows)
-    print(b11.board.cols)
-    print(b11.board.squares_left_row)
-    print(b11.board.squares_left_col)
-    print(bimaru.actions(b11))'''
-    
-    print(b11.board.end(), end='')
+    while True:
+        '''print(b1.board)
+        print(b1.board.rows)
+        print(b1.board.cols)
+        print(b1.board.squares_left_row)
+        print(b1.board.squares_left_col)
+        print(bimaru.actions(b1))'''
+        if len(bimaru.actions(b1)) == 0:
+            break
+        b1 = bimaru.result(b1, bimaru.actions(b1))
+   
+    print(b1.board.end(), end='')
 
     '''goal = greedy_search(bimaru)
     print(goal.state.board)'''
-    # TODO
+
