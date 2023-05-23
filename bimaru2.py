@@ -49,12 +49,12 @@ class Board:
     
     def __str__(self) -> str:
         string = ''
-        #print to debug without None
+        '''#print to debug without None
         m = self.matrix.copy()
         m[m == None] = '_'
         for row in m:
             string += (''.join(map(str, row))) + '\n'
-        return string
+        return string'''
         for row in self.matrix:
             string += (''.join(map(str, row))) + '\n'
         return string
@@ -71,6 +71,33 @@ class Board:
             self.squares_left_row[row] -= 1
             self.squares_left_col[col] -= 1
     
+    def value(self, row: int, col: int) -> str:
+        h = self.adjacent_horizontal_values(row, col)
+        v = self.adjacent_vertical_values(row, col)
+
+        if is_boat(h[0]) and is_boat(h[1]):
+            return 'm'
+        if is_boat(h[0]): # ao lado de um left ou middle
+            if col == 9 or h[1] in ('.', 'W') or self.rows[row] == 1:
+                return 'r'
+        if is_boat(h[1]): # ao lado de um right ou middle
+            if col == 0 or h[0] in ('.', 'W') or self.rows[row] == 1:
+                return 'l'
+        
+        if is_boat(v[0]) and is_boat(v[1]):
+            return 'm'
+        if is_boat(v[0]): # ao lado de um top ou middle
+            if row == 9 or v[1] in ('.', 'W') or self.cols[col] == 1:
+                return 'b'
+        if is_boat(v[1]): # ao lado de um bottom ou middle
+            if row == 0 or v[0] in ('.', 'W') or self.cols[col] == 1:
+                return 't'
+        
+        if (h[0] in ('.', 'W') or col == 0) and (h[1] in ('.', 'W') or col == 9) and (v[0] in ('.', 'W') or row == 0) and (v[1] in ('.', 'W') or row == 9):
+            return 'c'
+        
+        return 'x'
+    
     def new_value(self, row: int, col: int) -> str:
         h = self.adjacent_horizontal_values(row, col)
         v = self.adjacent_vertical_values(row, col)
@@ -78,22 +105,22 @@ class Board:
         if is_boat(h[0]) and is_boat(h[1]):
             return 'm'
         if is_boat(h[0]): # ao lado de um left ou middle
-            if col == 9 or h[1] == '.':
+            if col == 9 or h[1] in ('.', 'W'):
                 return 'r'
         if is_boat(h[1]): # ao lado de um right ou middle
-            if col == 0 or h[0] == '.':
+            if col == 0 or h[0] in ('.', 'W'):
                 return 'l'
         
         if is_boat(v[0]) and is_boat(v[1]):
             return 'm'
         if is_boat(v[0]): # ao lado de um top ou middle
-            if row == 9 or v[1] == '.':
+            if row == 9 or v[1] in ('.', 'W'):
                 return 'b'
         if is_boat(v[1]): # ao lado de um bottom ou middle
-            if row == 0 or v[0] == '.':
+            if row == 0 or v[0] in ('.', 'W'):
                 return 't'
         
-        if h[0] == '.' and h[1] == '.' and v[0] == '.' and v[1] == '.':
+        if (h[0] in ('.', 'W') or col == 0) and (h[1] in ('.', 'W') or col == 9) and (v[0] in ('.', 'W') or row == 0) and (v[1] in ('.', 'W') or row == 9):
             return 'c'
         
         return 'x'
@@ -102,7 +129,7 @@ class Board:
         (row, col, value) = action
         if 0 <= row < 10 and 0 <= col < 10 and self.get_value(row, col) == None:
             if value == 'x':
-                value = self.new_value(row, col)
+                value = self.value(row, col)
             self.matrix[row][col] = value
             self.squares_left_row[row] -= 1
             self.squares_left_col[col] -= 1
@@ -114,22 +141,6 @@ class Board:
             if self.full_col(col):
                 self.complete_col_with_water(col)
         return Board(self.matrix, self.rows, self.cols, self.squares_left_row, self.squares_left_col)
-    
-    '''def set_value(self, row: int, col: int, value: str):
-        """Devolve um novo Board com o novo valor na posição indicada"""
-        """Não sei se vai ter grande utilidade"""
-        new_matrix = self.matrix.copy()
-        new_rows = self.rows.copy()
-        new_cols = self.cols.copy()
-        new_slrow = self.squares_left_row.copy()
-        new_slcol = self.squares_left_col.copy()
-        new_matrix[row][col] = value
-        new_slrow[row] -= 1
-        new_slcol[col] -= 1
-        if value != '.':
-            new_rows[row] -= 1
-            new_cols[col] -= 1
-        return Board(new_matrix, new_cols, new_rows, new_slrow, new_slcol)'''
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
@@ -162,7 +173,8 @@ class Board:
     
     def complete_col_with_water(self, col: int):
         for i in range(0,10):
-            self.insert_water(i, col)
+            if self.get_value(i, col) == None:
+                self.insert_water(i, col)
     
     def complete_arround_with_water(self, row: int, col: int):
         value = self.get_value(row, col)
@@ -204,7 +216,7 @@ class Board:
             self.insert_water(row+1, col-2)
     
     def is_boat(self, row: int, col: int):
-        return self.get_value(row, col) != '.' and self.get_value(row, col) != None
+        return self.get_value(row, col) != '.' and self.get_value(row, col) != 'W' and self.get_value(row, col) != None
 
     def start_board(self):
         for i in range(0, 10):
@@ -221,50 +233,61 @@ class Board:
     def complete_boats_row(self, row: int):
         for i in range(0,10):
             if self.get_value(row, i) == None:
-                value = self.new_value(row, i)
+                value = self.value(row, i)
                 self.matrix[row][i] = value
                 self.squares_left_row[row] -= 1
                 self.squares_left_col[i] -= 1
                 self.rows[row] -= 1
                 self.cols[i] -= 1
                 self.complete_arround_with_water(row, i)
+                if self.full_col(i) and self.squares_left_col[i] != 0:
+                    self.complete_col_with_water(i) 
+        for i in range(0,10):
+            if self.get_value(row, i) == 'x':
+                self.matrix[row][i] = self.new_value(row, i)
         return Board(self.matrix, self.rows, self.cols, self.squares_left_row, self.squares_left_col)
     
     def complete_boats_col(self, col: int):
         for i in range(0,10):
             if self.get_value(i, col) == None:
-                value = self.new_value(i, col)
+                value = self.value(i, col)
                 self.matrix[i][col] = value
                 self.squares_left_row[i] -= 1
                 self.squares_left_col[col] -= 1
                 self.rows[i] -= 1
                 self.cols[col] -= 1
                 self.complete_arround_with_water(i, col)
+                if self.full_row(i) and self.squares_left_row[i] != 0:
+                    self.complete_row_with_water(i) 
+        for i in range(0,10):
+            if self.get_value(i, col) == 'x':
+                self.matrix[i][col] = self.new_value(i, col)
         return Board(self.matrix, self.rows, self.cols, self.squares_left_row, self.squares_left_col)
 
     
     def possible_actions(self):
-        for row in range(0, 10):
-            for col in range(0,10):
-                if self.is_boat(row, col):
-                    if self.get_value(row, col) in ('T', 't') and not self.is_boat(row+1, col):
-                        return [(row+1, col, 'x')]
-                    if self.get_value(row, col) in ('B', 'b') and not self.is_boat(row-1, col):
-                        return[(row-1, col, 'x')]
-                    if self.get_value(row, col) in ('L', 'l') and not self.is_boat(row, col+1):
-                        return[(row, col+1, 'x')]
-                    if self.get_value(row, col) in ('R', 'r') and not self.is_boat(row, col-1):
-                        return[(row, col-1, 'x')]
-                    if self.get_value(row, col) in ('M', 'm'):
-                        if '.' in self.adjacent_horizontal_values(row, col) and not self.is_boat(row-1, col) and not self.is_boat(row+1, col):
-                            return[(row-1, col, 'x'), (row+1, col, 'x')]
-                        if '.' in self.adjacent_vertical_values(row, col) and not self.is_boat(row, col-1) and not self.is_boat(row, col+1):
-                            return[(row, col-1, 'x'), (row, col+1, 'x')]
         for i in range(0, 10):
-            if self.rows[i] == self.squares_left_row[i] and self.rows[i] != 0 and self.squares_left_row[i] != 0:
+            if self.rows[i] != 0 and self.squares_left_row[i] != 0 and self.rows[i] == self.squares_left_row[i]:
                 return [('complete_boats_row', i)]
-            if self.cols[i] == self.squares_left_col[i] and self.cols[i] != 0 and self.squares_left_col[i] != 0:
+            if self.cols[i] != 0 and self.squares_left_col[i] != 0 and self.cols[i] == self.squares_left_col[i]:
                 return [('complete_boats_col', i)]
+        for row in range(0, 10):
+            if not self.full_row(row):
+                for col in range(0,10):
+                    if self.is_boat(row, col):
+                        if self.get_value(row, col) in ('T', 't') and not self.is_boat(row+1, col):
+                            return [(row+1, col, 'x')]
+                        if self.get_value(row, col) in ('B', 'b') and not self.is_boat(row-1, col):
+                            return[(row-1, col, 'x')]
+                        if self.get_value(row, col) in ('L', 'l') and not self.is_boat(row, col+1):
+                            return[(row, col+1, 'x')]
+                        if self.get_value(row, col) in ('R', 'r') and not self.is_boat(row, col-1):
+                            return[(row, col-1, 'x')]
+                        if self.get_value(row, col) in ('M', 'm'):
+                            if '.' in self.adjacent_horizontal_values(row, col) and not self.is_boat(row-1, col) and not self.is_boat(row+1, col):
+                                return[(row-1, col, 'x'), (row+1, col, 'x')]
+                            if '.' in self.adjacent_vertical_values(row, col) and not self.is_boat(row, col-1) and not self.is_boat(row, col+1):
+                                return[(row, col-1, 'x'), (row, col+1, 'x')]
         return []
         '''
         """ações possíveis para um quadrado preenchido por uma ponta"""
@@ -324,6 +347,13 @@ class Board:
             self.complete_col_with_boats(col) #TODO
         '''
 
+    def end(self):
+        for i in range(0,10):
+            for j in range(0,10):
+                if self.get_value(i, j) == 'x':
+                    self.matrix[i][j] = self.new_value(i, j)
+        return self
+
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -350,10 +380,8 @@ class Board:
             hint = sys.stdin.readline().replace('\n', '').split('\t')
             slrow[int(hint[1])] -= 1
             slcol[int(hint[2])] -= 1
-            if (hint[3] == 'W'):
-                matrix[int(hint[1])][int(hint[2])] = '.'
-            else:
-                matrix[int(hint[1])][int(hint[2])] = hint[3]
+            matrix[int(hint[1])][int(hint[2])] = hint[3]
+            if (hint[3] != 'W'):
                 rows[int(hint[1])] -= 1
                 cols[int(hint[2])] -= 1
         
@@ -418,35 +446,84 @@ if __name__ == "__main__":
     bimaru = Bimaru(board)
 
     b1 = BimaruState(board)
-    print(b1.board)
-    print(bimaru.actions(b1))
+    '''print(b1.board)
+    print(b1.board.rows)
+    print(b1.board.cols)
+    print(b1.board.squares_left_row)
+    print(b1.board.squares_left_col)
+    print(bimaru.actions(b1))'''
     b2 = bimaru.result(b1, bimaru.actions(b1))
-    print(b2.board)
-    print(bimaru.actions(b2))
+    '''print(b2.board)
+    print(b2.board.rows)
+    print(b2.board.cols)
+    print(b2.board.squares_left_row)
+    print(b2.board.squares_left_col)
+    print(bimaru.actions(b2))'''
     b3 = bimaru.result(b2, bimaru.actions(b2))
-    print(b3.board)
-    print(bimaru.actions(b3))
+    '''print(b3.board)
+    print(b3.board.rows)
+    print(b3.board.cols)
+    print(b3.board.squares_left_row)
+    print(b3.board.squares_left_col)
+    print(bimaru.actions(b3))'''
     b4 = bimaru.result(b3, bimaru.actions(b3))
-    print(b4.board)
-    print(bimaru.actions(b4))
+    '''print(b4.board)
+    print(b4.board.rows)
+    print(b4.board.cols)
+    print(b4.board.squares_left_row)
+    print(b4.board.squares_left_col)
+    print(bimaru.actions(b4))'''
     b5 = bimaru.result(b4, bimaru.actions(b4))
-    print(b5.board)
-    print(bimaru.actions(b5))
+    '''print(b5.board)
+    print(b5.board.rows)
+    print(b5.board.cols)
+    print(b5.board.squares_left_row)
+    print(b5.board.squares_left_col)
+    print(bimaru.actions(b5))'''
     b6 = bimaru.result(b5, bimaru.actions(b5))
-    print(b6.board)
-    print(bimaru.actions(b6))
+    '''print(b6.board)
+    print(b6.board.rows)
+    print(b6.board.cols)
+    print(b6.board.squares_left_row)
+    print(b6.board.squares_left_col)
+    print(bimaru.actions(b6))'''
     b7 = bimaru.result(b6, bimaru.actions(b6))
-    print(b7.board)
-    print(bimaru.actions(b7))
+    '''print(b7.board)
+    print(b7.board.rows)
+    print(b7.board.cols)
+    print(b7.board.squares_left_row)
+    print(b7.board.squares_left_col)
+    print(bimaru.actions(b7))'''
     b8 = bimaru.result(b7, bimaru.actions(b7))
-    print(b8.board)
-    print(bimaru.actions(b8))
+    '''print(b8.board)
+    print(b8.board.rows)
+    print(b8.board.cols)
+    print(b8.board.squares_left_row)
+    print(b8.board.squares_left_col)
+    print(bimaru.actions(b8))'''
     b9 = bimaru.result(b8, bimaru.actions(b8))
-    print(b9.board)
-    print(bimaru.actions(b9))
+    '''print(b9.board)
+    print(b9.board.rows)
+    print(b9.board.cols)
+    print(b9.board.squares_left_row)
+    print(b9.board.squares_left_col)
+    print(bimaru.actions(b9))'''
     b10 = bimaru.result(b9, bimaru.actions(b9))
-    print(b10.board)
-    print(bimaru.actions(b10))
+    '''print(b10.board)
+    print(b10.board.rows)
+    print(b10.board.cols)
+    print(b10.board.squares_left_row)
+    print(b10.board.squares_left_col)
+    print(bimaru.actions(b10))'''
+    b11 = bimaru.result(b10, bimaru.actions(b10))
+    '''print(b11.board)
+    print(b11.board.rows)
+    print(b11.board.cols)
+    print(b11.board.squares_left_row)
+    print(b11.board.squares_left_col)
+    print(bimaru.actions(b11))'''
+    
+    print(b11.board.end(), end='')
 
     '''goal = greedy_search(bimaru)
     print(goal.state.board)'''
