@@ -45,12 +45,12 @@ class Board:
 
     def __str__(self) -> str:
         string = ''
-        #print to debug without None           '''retirar para a entrega final'''
+        """ #print to debug without None           '''retirar para a entrega final'''
         m = self.matrix.copy()
         m[m == None] = '_'
         for row in m:
             string += (''.join(map(str, row))) + '\n'
-        return string
+        return string """
         for row in self.matrix:
             string += (''.join(map(str, row))) + '\n'
         return string
@@ -70,11 +70,11 @@ class Board:
     def copy_array(self, array):
         new_array = []
         for a in array:
-            new_array += a.copy()
+            new_array += [a.copy()]
         return new_array
 
     def copy_board(self):
-        matrix = self.copy_array(self.matrix)
+        matrix = np.copy(self.matrix)
         rows = self.copy_array(self.rows)
         cols = self.copy_array(self.cols)
         squares_left_row = self.squares_left_row.copy()
@@ -84,13 +84,11 @@ class Board:
     
     def insert_boat(self, row: int, col: int, value: str):
         if 0 <= row < 10 and 0 <= col < 10 and self.get_value(row, col) == None:
-            print(value, [row,col], 'before', self.rows[row], self.cols[col])
             self.matrix[row][col] = value
             self.squares_left_row[row] -= 1
             self.squares_left_col[col] -= 1
             self.rows[row][1] += 1
             self.cols[col][1] += 1
-            print('after', self.rows[row], self.cols[col])
             self.complete_arround_with_water(row, col)
             if self.full_row(row):
                 self.complete_row_with_water(row)
@@ -234,8 +232,8 @@ class Board:
                     self.boats[3] -= 1
 
         elif value in ('R', 'r'):
-            aux1 = self.get_value(row,col+1)
-            aux2 = self.get_value(row,col+2)
+            aux1 = self.get_value(row,col-1)
+            aux2 = self.get_value(row,col-2)
             if aux1 == None:
                 if col == 1 or aux2 in ('.', 'W') or self.diff_rows(row) == 1 or self.diff_cols(col-1) == 1:
                     self.insert_boat(row, col-1, 'l')
@@ -275,10 +273,10 @@ class Board:
                     self.insert_boat(row-1, col, 'l')
                     self.insert_boat(row+1, col, 'r')
                     self.boats[2] -= 1
-                if aux1 == None and (col == 8 or aux2 in ('.', 'W')
+                elif aux1 == None and (col == 8 or aux2 in ('.', 'W')
                                      or self.diff_rows(row) == 1 or self.diff_cols(col+1) == 1):
                     self.insert_boat(row, col+1, 'r')
-                if aux_1 == None and (col == 1 or aux_2 in ('.', 'W')
+                elif aux_1 == None and (col == 1 or aux_2 in ('.', 'W')
                                       or self.diff_rows(row) == 1 or self.diff_cols(col-1) == 1):
                     self.insert_boat(row, col-1, 'l')
 
@@ -313,6 +311,7 @@ class Board:
             for j in range(0, 10):
                 if self.is_boat(i, j):
                     self.complete_if_possible(i, j)
+                    
         return self
 
 
@@ -340,26 +339,25 @@ class Board:
                 boat_size = 2
                 if self.boats[1] == 0:
                     boat_size = 1
+                    if self.boats[0] == 0:
+                        return []
                 
         rows_to_test = []
         cols_to_test = []
         for i in range(0,10):
-            if self.rows[i][0] >= boat_size:
+            if self.rows[i][0] >= boat_size and self.diff_rows(i) != 0:
                 rows_to_test += [i]
-            if self.cols[i][0] >= boat_size:
+            if self.cols[i][0] >= boat_size and self.diff_cols(i) != 0:
                 cols_to_test += [i]
 
         actions = []
+
         if boat_size == 1:
             for row in rows_to_test:
-                for col in range(0,10):
-                    if self.get_value(row, col) == None and self.diff_rows(row) != 0 and self.diff_cols(col) != 0:
+                for col in cols_to_test:
+                    if self.get_value(row, col) == None:
                         actions += [('insert_single', row, col)]
-
-            for col in cols_to_test:
-                for row in range(0,10):
-                    if self.get_value(row, col) == None and self.diff_rows(row) != 0 and self.diff_cols(col) != 0:
-                        actions += [('insert_single', row, col)]
+            return actions
 
         for row in rows_to_test:
             count = 0
@@ -377,6 +375,7 @@ class Board:
                     and self.check_left(row, first_col) and self.check_right(row, col)):
                     #col-boat_size+1 é o inicio do barco a contar da esquerda
                     actions += [('insert_row', row, first_col, boat_size)]
+                    
         for col in cols_to_test:
             count = 0
             count_temp = 0
@@ -457,11 +456,7 @@ class Board:
             new_cols += [[cols[i], 0]]
 
         n = int(sys.stdin.readline().replace('\n', ''))
-        matrix = []
-        for i in range (10):
-            aux = [None] * 10
-            matrix.append(aux)
-        print(matrix)
+        matrix = np.full((10,10), None)
         slrow = [10] * 10
         slcol = [10] * 10
         boats = [4, 3, 2, 1]
@@ -475,7 +470,7 @@ class Board:
                     boats[0] -= 1
                 new_rows[int(hint[1])][1] += 1
                 new_cols[int(hint[2])][1] += 1
-        
+                
         return Board(matrix, new_rows, new_cols, slrow, slcol, boats).start_board()
 
     # TODO: outros metodos da classe
@@ -505,6 +500,8 @@ class Bimaru(Problem):
                 return BimaruState(state.board.insert_col(action[1], action[2], action[3]))
             elif action[0] == "insert_row":
                 return BimaruState(state.board.insert_row(action[1], action[2], action[3]))
+        if len(action) == 3:
+            return BimaruState(state.board.insert_single(action[1], action[2]))
 
         '''('insert_col', row-boat_size+1, col, boat_size)'''
         """ if len(action) == 2:
@@ -538,8 +535,9 @@ if __name__ == "__main__":
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
+
     board = Board.parse_instance()
     bimaru = Bimaru(board)
 
-    goal = depth_first_tree_search(bimaru)
-    #print(goal.state.board, end='')
+    goal = breadth_first_tree_search(bimaru)
+    print(goal.state.board, end='')
